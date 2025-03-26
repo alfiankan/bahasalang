@@ -99,14 +99,6 @@ StmtPtr Parser::parseFunction() {
             // Parse expression statement (e.g., function calls)
             auto expr = parseExpression();
             body.push_back(std::make_shared<ExprStmt>(expr));
-            // Skip any remaining tokens until we hit a known statement start
-            while (!check(TokenType::RETURN_ARROW) && 
-                   !check(TokenType::MUTASI) && 
-                   !check(TokenType::IF) && 
-                   !check(TokenType::RBRACE) && 
-                   !isAtEnd()) {
-                advance();
-            }
         }
     }
     

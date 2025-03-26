@@ -45,8 +45,9 @@ private:
     llvm::Type* getIntType();
     llvm::Function* getCurrentFunction() const;
     void createPrintFunction();
-    llvm::Value* getStringConstant(const std::string& str);
-    
+    void createTidurFunction();
+    llvm::Value *getStringConstant(const std::string &str);
+
     // Add these two method declarations
     bool containsPrintCall(const StmtPtr& stmt);
     bool containsSleepCall(const StmtPtr& stmt);

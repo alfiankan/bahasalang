@@ -1,0 +1,14 @@
+modul main
+
+
+fungsi berputar(mulai: int) -> int {
+    
+    tidur(1)
+    tampilkan("berputar: %d \n", mulai)
+    <- berputar(mulai + 1)
+}
+
+
+fungsi main() -> int {
+    <- berputar(0)
+}

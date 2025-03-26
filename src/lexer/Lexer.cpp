@@ -13,7 +13,7 @@ static std::unordered_map<std::string, TokenType> keywords = {
     {"adalah", TokenType::ADALAH},
     {"dan", TokenType::DAN},
     {"atau", TokenType::ATAU},
-    {"tidur", TokenType::TIDUR}
+
 };
 
 Lexer::Lexer(std::string source) : source(std::move(source)) {}

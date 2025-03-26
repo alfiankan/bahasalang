@@ -8,6 +8,8 @@
 #include "ast/ASTPrinter.hpp"
 #include "codegen/Codegen.hpp"
 #include <unistd.h> // For mkstemp
+#include <cstdlib>
+#include <filesystem>
 
 std::string readFile(const std::string& path) {
     std::ifstream file(path);
@@ -58,9 +60,11 @@ void printUsage(const char* program) {
               << "  ir       Kompilasi kode sumber ke LLVM IR\n"
               << "  susun    Kompilasi kode sumber ke program\n"
               << "  jalankan Kompilasi dan jalankan program\n"
+              << "  wasm     Kompilasi kode sumber ke WebAssembly\n"
               << "  ast      Tampilkan AST\n\n"
               << "Opsi:\n"
-              << "  -o <berkas>   Berkas keluaran (default: a.out untuk susun/jalankan, <nama_modul>.ll untuk ir)\n";
+              << "  -o <berkas>   Berkas keluaran (default: a.out untuk susun/jalankan,\n"
+              << "                <nama_modul>.ll untuk ir, <nama_modul>.wasm untuk wasm)\n";
 }
 
 int compileLLVMIR(const std::string& sourcePath, const std::string& outputPath = "") {
@@ -205,6 +209,40 @@ int printAST(const std::string& sourcePath) {
     }
 }
 
+int compileToWasm(const std::string& sourcePath, const std::string& outputPath = "") {
+    try {
+        // First compile to LLVM IR
+        std::string irPath = createTempFile(".ll");
+        if (compileLLVMIR(sourcePath, irPath) != 0) {
+            std::remove(irPath.c_str());
+            throw std::runtime_error("Gagal mengkompilasi ke LLVM IR");
+        }
+
+        // Determine output file name
+        std::string outFile = outputPath;
+        if (outFile.empty()) {
+            outFile = std::filesystem::path(sourcePath).stem().string() + ".wasm";
+        }
+
+        // Use llc to compile IR to WASM
+        std::string cmd = "llc --march=wasm32 --filetype=obj " + irPath + " -o " + outFile;
+        if (int result = system(cmd.c_str())) {
+            std::remove(irPath.c_str());
+            throw std::runtime_error("Gagal mengkompilasi IR ke WebAssembly");
+        }
+
+        // Clean up temporary files
+        std::remove(irPath.c_str());
+        
+        std::cout << "Berhasil dikompilasi ke " << outFile << std::endl;
+        return 0;
+
+    } catch (const std::exception& e) {
+        std::cerr << "Galat: " << e.what() << std::endl;
+        return 1;
+    }
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         printUsage(argv[0]);
@@ -308,7 +346,34 @@ int main(int argc, char* argv[]) {
         }
         
         return printAST(sourcePath);
-    } else {
+    }
+    else if (command == "wasm") {
+        std::string outputPath;
+        std::string sourcePath;
+        
+        // Parse options
+        for (int i = 2; i < argc; i++) {
+            std::string arg = argv[i];
+            if (arg == "-o") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Galat: -o membutuhkan nama berkas keluaran\n";
+                    return 1;
+                }
+                outputPath = argv[++i];
+            } else {
+                sourcePath = arg;
+            }
+        }
+        
+        if (sourcePath.empty()) {
+            std::cerr << "Galat: Berkas sumber tidak ditemukan\n";
+            printUsage(argv[0]);
+            return 1;
+        }
+        
+        return compileToWasm(sourcePath, outputPath);
+    }
+    else {
         std::cerr << "Perintah tidak dikenal: " << command << std::endl;
         printUsage(argv[0]);
         return 1;

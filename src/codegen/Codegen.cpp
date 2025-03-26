@@ -1,6 +1,8 @@
 #include "Codegen.hpp"
 #include <llvm/IR/Verifier.h>
 #include <iostream>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Support/TargetSelect.h>
 
 namespace bahasa {
 
@@ -8,7 +10,10 @@ Codegen::Codegen(std::string moduleName) {
     context = std::make_unique<llvm::LLVMContext>();
     module = std::make_unique<llvm::Module>(moduleName, *context);
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
+    
+    // Set up WebAssembly target
 }
+
 
 void Codegen::createPrintFunction() {
     // First declare printf
@@ -61,9 +66,60 @@ void Codegen::createPrintFunction() {
     functions["tampilkan"] = tampilkanFunc;
 }
 
+void Codegen::createTidurFunction() {
+    std::vector<llvm::Type*> sleepArgs;
+    sleepArgs.push_back(getIntType());  // takes int seconds
+
+    // Declare sleep function properly (returns int)
+    llvm::FunctionType* sleepType = llvm::FunctionType::get(
+        getIntType(),  // Return type (int)
+        sleepArgs,     // Params
+        false          // Not variadic
+    );
+    
+    llvm::Function* sleepFunc = llvm::Function::Create(
+        sleepType,
+        llvm::Function::ExternalLinkage,
+        "sleep",
+        module.get()
+    );
+
+    // Create a wrapper function "tidur" (void tidur(int))
+    llvm::FunctionType* tidurType = llvm::FunctionType::get(
+        llvm::Type::getVoidTy(*context),
+        {getIntType()},  // (int seconds)
+        false
+    );
+    
+    llvm::Function* tidurFunc = llvm::Function::Create(
+        tidurType,
+        llvm::Function::ExternalLinkage,
+        "tidur",
+        module.get()
+    );
+
+    // Create the function body
+    llvm::BasicBlock* entry = llvm::BasicBlock::Create(*context, "entry", tidurFunc);
+    builder->SetInsertPoint(entry);
+
+    // Get function arguments
+    auto args = tidurFunc->arg_begin();
+    llvm::Value* duration = args;
+
+    // Call sleep (fix: assign return value)
+    std::vector<llvm::Value*> sleepArgs2;
+    sleepArgs2.push_back(duration);
+    builder->CreateCall(sleepFunc, sleepArgs2);  // Ignore return value
+
+    builder->CreateRetVoid();
+    
+    functions["tidur"] = tidurFunc;
+}
+
 void Codegen::generate(const std::vector<StmtPtr>& statements) {
     // First pass: Forward declare all functions and check if tampilkan is used
     bool needsPrintFunction = false;
+    bool needsTidurFunction = false;
     
     // First check if we need tampilkan
     for (const auto& stmt : statements) {
@@ -77,6 +133,9 @@ void Codegen::generate(const std::vector<StmtPtr>& statements) {
                                 if (call->callee == "tampilkan") {
                                     needsPrintFunction = true;
                                 }
+                                if (call->callee == "tidur") {
+                                    needsTidurFunction = true;
+                                }
                             }
                         }
                     }
@@ -86,15 +145,22 @@ void Codegen::generate(const std::vector<StmtPtr>& statements) {
                         if (call->callee == "tampilkan") {
                             needsPrintFunction = true;
                         }
+                        if (call->callee == "tidur") {
+                            needsTidurFunction = true;
+                        }
                     }
                 }
             }
         }
     }
     
-    // Create tampilkan if needed (before any other functions)
+    // Create needed functions
     if (needsPrintFunction) {
         createPrintFunction();
+    }
+
+    if (needsTidurFunction) {
+        createTidurFunction();
     }
     
     // Forward declare all user functions
@@ -131,6 +197,7 @@ void Codegen::generate(const std::vector<StmtPtr>& statements) {
             generateFunction(func.get());
         }
     }
+
 }
 
 void Codegen::generateFunction(const FunctionStmt* func) {
@@ -391,6 +458,14 @@ llvm::Value* Codegen::generateCall(const CallExpr* call) {
             argsV.push_back(generateExpr(call->arguments[1].get()));
         }
         
+        builder->CreateCall(callee, argsV);
+        return llvm::ConstantInt::get(getIntType(), 0); // Return dummy value
+    }
+    else if (callee->getName() == "tidur") {
+        if (call->arguments.size() < 1) {
+            llvm::report_fatal_error("tidur membutuhkan minimal 1 argumen: integer");
+        }
+        argsV.push_back(generateExpr(call->arguments[0].get()));
         builder->CreateCall(callee, argsV);
         return llvm::ConstantInt::get(getIntType(), 0); // Return dummy value
     }

@@ -1,0 +1,22 @@
+modul main
+
+
+fungsi nth_fibonacci(n: int) -> int {
+    jika n <= 1 {
+        <- n
+    }
+    <- nth_fibonacci(n - 1) + nth_fibonacci(n - 2)
+}
+
+
+fungsi tambah(a: int, b: int) -> int {
+    <- a + nth_fibonacci(b)
+}
+
+
+fungsi main() -> int {
+    mutasi hasil = tambah(1, 5)
+    tampilkan("Hasil: %d\n", hasil)
+    <- 0 + hasil
+}
+

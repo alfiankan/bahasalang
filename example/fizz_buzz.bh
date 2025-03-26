@@ -1,0 +1,19 @@
+modul main
+
+fungsi fizz_buzz(n_iter: int) -> int {
+    jika n_iter modulo 3 adalah 0 {
+        tampilkan("%s\n", "Fizz")
+    }
+    jika n_iter modulo 5 adalah 0 {
+        tampilkan("%s\n", "Buzz")
+    }
+    jika n_iter adalah 0 {
+        <- 0
+    }
+    <- fizz_buzz(n_iter - 1)
+}
+
+fungsi main() -> int {
+    fizz_buzz(10)
+    <- 0
+}

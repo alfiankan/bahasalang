@@ -1,0 +1,30 @@
+modul main
+
+fungsi main() -> int {
+    mutasi a = 10
+    mutasi b = 20
+    mutasi c = a + b
+    tampilkan("Hasil: %d\n", c)
+    mutasi d = a - b
+    tampilkan("Hasil: %d\n", d)
+    mutasi e = a * b
+    tampilkan("Hasil: %d\n", e)
+    mutasi f = a / b
+    tampilkan("Hasil: %d\n", f)
+    mutasi g = a modulo b
+    tampilkan("Hasil: %d\n", g)
+    mutasi h = a > b
+    tampilkan("Hasil: %d\n", h)
+    mutasi i = a < b
+    tampilkan("Hasil: %d\n", i)
+
+    mutasi j = a >= b
+    tampilkan("Hasil: %d\n", j)
+    mutasi k = a <= b
+    tampilkan("Hasil: %d\n", k)
+    mutasi l = a dan b
+    tampilkan("Hasil: %d\n", l)
+    mutasi m = a atau b
+    tampilkan("Hasil: %d\n", m)
+    <- 0
+}

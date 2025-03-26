@@ -144,6 +144,15 @@ public:
         : op(std::move(o)), operand(std::move(e)) {}
 };
 
+// Add this to your expression types
+struct AssignmentExpr : public Expr {
+    std::string name;
+    ExprPtr value;
+    
+    AssignmentExpr(std::string name, ExprPtr value)
+        : name(std::move(name)), value(std::move(value)) {}
+};
+
 // Move ASTPrinter class definition to ASTPrinter.hpp
 // Remove any ASTPrinter declarations from here
 

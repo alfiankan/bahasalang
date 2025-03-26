@@ -15,7 +15,7 @@ fungsi tambah(a: int, b: int) -> int {
 
 
 fungsi main() -> int {
-    mutasi hasil = tambah(1, 5)
+    mutasi hasil: int = tambah(1, 5)
     tampilkan("Hasil: %d\n", hasil)
     <- 0 + hasil
 }

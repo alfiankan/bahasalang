@@ -178,6 +178,8 @@ void Codegen::generateVarDecl(const VarDeclStmt* var, llvm::Function* currentFun
     // Create an alloca instruction in the entry block of the function
     llvm::IRBuilder<> tempBuilder(&currentFunction->getEntryBlock(), 
                                  currentFunction->getEntryBlock().begin());
+    
+    // Create alloca for the variable
     llvm::AllocaInst* alloca = tempBuilder.CreateAlloca(getIntType(), nullptr, var->name);
     
     // Generate the initializer expression
@@ -250,6 +252,9 @@ llvm::Value* Codegen::generateExpr(const Expr* expr) {
     }
     else if (auto call = dynamic_cast<const CallExpr*>(expr)) {
         return generateCall(call);
+    }
+    else if (auto assign = dynamic_cast<const AssignmentExpr*>(expr)) {
+        return generateAssignment(assign);
     }
     
     llvm::report_fatal_error(llvm::Twine("Tipe ekspresi tidak dikenal"));
@@ -418,6 +423,23 @@ llvm::Value* Codegen::generateUnary(const UnaryExpr* unary) {
     
     llvm::report_fatal_error(llvm::Twine("Operator unary tidak dikenal: ") + unary->op);
     return nullptr;
+}
+
+llvm::Value* Codegen::generateAssignment(const AssignmentExpr* assign) {
+    // Get the variable's alloca instruction
+    llvm::Value* variable = namedValues[assign->name];
+    if (!variable) {
+        llvm::report_fatal_error(llvm::Twine("Variabel tidak ditemukan: ") + assign->name);
+    }
+    
+    // Generate the value to assign
+    llvm::Value* value = generateExpr(assign->value.get());
+    
+    // Store the value
+    builder->CreateStore(value, variable);
+    
+    // Return the assigned value
+    return value;
 }
 
 } // namespace bahasa 

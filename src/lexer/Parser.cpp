@@ -159,6 +159,20 @@ std::vector<Parameter> Parser::parseParameters() {
 }
 
 ExprPtr Parser::parseExpression() {
+    // Try to parse an assignment first
+    if (match(TokenType::IDENTIFIER)) {
+        std::string name = previous().lexeme;
+        
+        if (match(TokenType::EQUALS)) {
+            ExprPtr value = parseExpression();
+            return std::make_shared<AssignmentExpr>(name, value);
+        }
+        
+        // If it's not an assignment, rewind and parse as comparison
+        current--;  // Rewind the identifier token
+        return parseComparison();
+    }
+    
     return parseComparison();
 }
 
@@ -195,7 +209,11 @@ StmtPtr Parser::parseVarDecl() {
     consume(TokenType::IDENTIFIER, "Harap masukkan nama variabel setelah 'mutasi'.");
     std::string name = previous().lexeme;
     
-    consume(TokenType::EQUALS, "Harap '=' setelah nama variabel.");
+    // Handle type declaration
+    consume(TokenType::COLON, "Harap ':' setelah nama variabel.");
+    consume(TokenType::INT, "Harap tipe variabel.");
+    
+    consume(TokenType::EQUALS, "Harap '=' setelah deklarasi tipe.");
     ExprPtr initializer = parseExpression();
     
     return std::make_shared<VarDeclStmt>(name, initializer);

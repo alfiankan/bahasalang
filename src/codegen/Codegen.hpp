@@ -39,6 +39,7 @@ private:
     llvm::Value* generateComparison(const ComparisonExpr* comp);
     llvm::Value* generateCall(const CallExpr* call);
     llvm::Value* generateUnary(const UnaryExpr* unary);
+    llvm::Value* generateAssignment(const AssignmentExpr* assign);
     
     // Helper methods
     llvm::Type* getIntType();

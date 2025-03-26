@@ -8,8 +8,6 @@
 #include "ast/ASTPrinter.hpp"
 #include "codegen/Codegen.hpp"
 #include <unistd.h> // For mkstemp
-#include <cstdlib>
-#include <filesystem>
 
 std::string readFile(const std::string& path) {
     std::ifstream file(path);
@@ -60,11 +58,10 @@ void printUsage(const char* program) {
               << "  ir       Kompilasi kode sumber ke LLVM IR\n"
               << "  susun    Kompilasi kode sumber ke program\n"
               << "  jalankan Kompilasi dan jalankan program\n"
-              << "  wasm     Kompilasi kode sumber ke WebAssembly\n"
-              << "  ast      Tampilkan AST\n\n"
+              << "  ast      Tampilkan AST\n"
+              << "  token    Tampilkan daftar token\n\n"
               << "Opsi:\n"
-              << "  -o <berkas>   Berkas keluaran (default: a.out untuk susun/jalankan,\n"
-              << "                <nama_modul>.ll untuk ir, <nama_modul>.wasm untuk wasm)\n";
+              << "  -o <berkas>   Berkas keluaran (default: a.out untuk susun/jalankan, <nama_modul>.ll untuk ir)\n";
 }
 
 int compileLLVMIR(const std::string& sourcePath, const std::string& outputPath = "") {
@@ -209,34 +206,75 @@ int printAST(const std::string& sourcePath) {
     }
 }
 
-int compileToWasm(const std::string& sourcePath, const std::string& outputPath = "") {
+// Add this helper function to escape special characters
+std::string escapeString(const std::string& str) {
+    std::string result;
+    for (char c : str) {
+        switch (c) {
+            case '\n': result += "\\n"; break;
+            case '\t': result += "\\t"; break;
+            case '\r': result += "\\r"; break;
+            case '\\': result += "\\\\"; break;
+            case '"': result += "\\\""; break;
+            default: result += c;
+        }
+    }
+    return result;
+}
+
+// Update the printTokens function
+int printTokens(const std::string& sourcePath) {
     try {
-        // First compile to LLVM IR
-        std::string irPath = createTempFile(".ll");
-        if (compileLLVMIR(sourcePath, irPath) != 0) {
-            std::remove(irPath.c_str());
-            throw std::runtime_error("Gagal mengkompilasi ke LLVM IR");
-        }
-
-        // Determine output file name
-        std::string outFile = outputPath;
-        if (outFile.empty()) {
-            outFile = std::filesystem::path(sourcePath).stem().string() + ".wasm";
-        }
-
-        // Use llc to compile IR to WASM
-        std::string cmd = "llc --march=wasm32 --filetype=obj " + irPath + " -o " + outFile;
-        if (int result = system(cmd.c_str())) {
-            std::remove(irPath.c_str());
-            throw std::runtime_error("Gagal mengkompilasi IR ke WebAssembly");
-        }
-
-        // Clean up temporary files
-        std::remove(irPath.c_str());
+        std::string source = readFile(sourcePath);
+        bahasa::Lexer lexer(source);
+        auto tokens = lexer.tokenize();
         
-        std::cout << "Berhasil dikompilasi ke " << outFile << std::endl;
+        // Calculate column widths
+        size_t typeWidth = 12;    // Minimum width for type column
+        size_t lexemeWidth = 15;  // Minimum width for lexeme column
+        size_t lineWidth = 4;     // Width for line number column
+        
+        // Update widths based on actual content
+        for (const auto& token : tokens) {
+            typeWidth = std::max(typeWidth, getTokenTypeName(token.type).length());
+            // Use escaped string length for lexeme width calculation
+            lexemeWidth = std::max(lexemeWidth, escapeString(token.lexeme).length());
+        }
+        
+        // Add padding
+        typeWidth += 2;
+        lexemeWidth += 2;
+        lineWidth += 2;
+        
+        // Print header with separators
+        std::cout << "+" << std::string(typeWidth, '-') 
+                  << "+" << std::string(lexemeWidth, '-')
+                  << "+" << std::string(lineWidth, '-') << "+" << std::endl;
+        
+        std::cout << "| " << std::setw(typeWidth-1) << std::left << "Type"
+                  << "| " << std::setw(lexemeWidth-1) << std::left << "Lexeme"
+                  << "| " << std::setw(lineWidth-1) << std::left << "Line"
+                  << "|" << std::endl;
+        
+        std::cout << "+" << std::string(typeWidth, '-') 
+                  << "+" << std::string(lexemeWidth, '-')
+                  << "+" << std::string(lineWidth, '-') << "+" << std::endl;
+        
+        // Print tokens with escaped lexemes
+        for (const auto& token : tokens) {
+            std::cout << "| " << std::setw(typeWidth-1) << std::left << getTokenTypeName(token.type)
+                      << "| " << std::setw(lexemeWidth-1) << std::left << escapeString(token.lexeme)
+                      << "| " << std::setw(lineWidth-1) << std::right << token.line
+                      << "|" << std::endl;
+        }
+        
+        // Print footer
+        std::cout << "+" << std::string(typeWidth, '-') 
+                  << "+" << std::string(lexemeWidth, '-')
+                  << "+" << std::string(lineWidth, '-') << "+" << std::endl;
+        
         return 0;
-
+        
     } catch (const std::exception& e) {
         std::cerr << "Galat: " << e.what() << std::endl;
         return 1;
@@ -347,19 +385,15 @@ int main(int argc, char* argv[]) {
         
         return printAST(sourcePath);
     }
-    else if (command == "wasm") {
-        std::string outputPath;
+    else if (command == "token") {
         std::string sourcePath;
         
         // Parse options
         for (int i = 2; i < argc; i++) {
             std::string arg = argv[i];
             if (arg == "-o") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Galat: -o membutuhkan nama berkas keluaran\n";
-                    return 1;
-                }
-                outputPath = argv[++i];
+                std::cerr << "Peringatan: opsi -o diabaikan untuk perintah token\n";
+                i++; // Skip the next argument
             } else {
                 sourcePath = arg;
             }
@@ -371,9 +405,8 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         
-        return compileToWasm(sourcePath, outputPath);
-    }
-    else {
+        return printTokens(sourcePath);
+    } else {
         std::cerr << "Perintah tidak dikenal: " << command << std::endl;
         printUsage(argv[0]);
         return 1;

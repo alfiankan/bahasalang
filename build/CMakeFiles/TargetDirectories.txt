@@ -1,7 +1,0 @@
-/Users/alfiankan/bahasa/build/CMakeFiles/intrinsics_gen.dir
-/Users/alfiankan/bahasa/build/CMakeFiles/omp_gen.dir
-/Users/alfiankan/bahasa/build/CMakeFiles/acc_gen.dir
-/Users/alfiankan/bahasa/build/CMakeFiles/RISCVTargetParserTableGen.dir
-/Users/alfiankan/bahasa/build/CMakeFiles/bahasa.dir
-/Users/alfiankan/bahasa/build/CMakeFiles/edit_cache.dir
-/Users/alfiankan/bahasa/build/CMakeFiles/rebuild_cache.dir

@@ -40,6 +40,8 @@ private:
     llvm::Value* generateCall(const CallExpr* call);
     llvm::Value* generateUnary(const UnaryExpr* unary);
     llvm::Value* generateAssignment(const AssignmentExpr* assign);
+    llvm::Value* generateArrayLiteral(const ArrayLiteralExpr* arrayLiteral);
+    llvm::Value* generateArrayIndex(const ArrayIndexExpr* arrayIndex);
     
     // Helper methods
     llvm::Type* getIntType();

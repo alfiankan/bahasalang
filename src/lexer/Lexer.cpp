@@ -14,7 +14,7 @@ static std::unordered_map<std::string, TokenType> keywords = {
     {"adalah", TokenType::ADALAH},
     {"dan", TokenType::DAN},
     {"atau", TokenType::ATAU},
-
+    {"koleksi", TokenType::KOLEKSI},
 };
 
 Lexer::Lexer(std::string source) : source(std::move(source)) {}
@@ -191,6 +191,9 @@ std::vector<Token> Lexer::tokenize() {
             case ')': tokens.push_back(makeToken(TokenType::RPAREN)); break;
             case '{': tokens.push_back(makeToken(TokenType::LBRACE)); break;
             case '}': tokens.push_back(makeToken(TokenType::RBRACE)); break;
+            case '[': tokens.push_back(makeToken(TokenType::LBRACKET)); break;
+            case ']': tokens.push_back(makeToken(TokenType::RBRACKET)); break;
+            case '.': tokens.push_back(makeToken(TokenType::DOT)); break;
             case ',': tokens.push_back(makeToken(TokenType::COMMA)); break;
             case ':': tokens.push_back(makeToken(TokenType::COLON)); break;
             case '+': tokens.push_back(makeToken(TokenType::PLUS)); break;

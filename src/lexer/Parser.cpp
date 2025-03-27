@@ -203,12 +203,23 @@ StmtPtr Parser::parseVarDecl() {
     
     // Handle type declaration
     consume(TokenType::COLON, "Harap ':' setelah nama variabel.");
-    consume(TokenType::INT, "Harap tipe variabel.");
+    std::shared_ptr<Type> type = parseType();
     
     consume(TokenType::EQUALS, "Harap '=' setelah deklarasi tipe.");
     ExprPtr initializer = parseExpression();
     
-    return std::make_shared<VarDeclStmt>(name, initializer);
+    return std::make_shared<VarDeclStmt>(name, type, initializer);
+}
+
+std::shared_ptr<Type> Parser::parseType() {
+    if (match(TokenType::KOLEKSI)) {
+        consume(TokenType::LBRACKET, "Harap '[' setelah 'koleksi'.");
+        consume(TokenType::INT, "Harap tipe elemen array.");
+        consume(TokenType::RBRACKET, "Harap ']' setelah tipe elemen.");
+        return Type::createArray(Type::createInt(), 0); // Size will be set later
+    }
+    consume(TokenType::INT, "Harap tipe variabel.");
+    return Type::createInt();
 }
 
 ExprPtr Parser::parsePrimary() {
@@ -225,7 +236,14 @@ ExprPtr Parser::parsePrimary() {
         if (match(TokenType::LPAREN)) {
             return parseCall(name);
         }
+        if (match(TokenType::DOT)) {
+            return parseArrayIndex(name);
+        }
         return std::make_shared<VariableExpr>(name);
+    }
+    
+    if (match(TokenType::LBRACKET)) {
+        return parseArrayLiteral();
     }
     
     if (match(TokenType::LPAREN)) {
@@ -256,6 +274,28 @@ std::vector<ExprPtr> Parser::parseArguments() {
     }
     
     return arguments;
+}
+
+ExprPtr Parser::parseArrayIndex(const std::string& name) {
+    if (match(TokenType::NUMBER)) {
+        ExprPtr index = std::make_shared<NumberExpr>(std::stoi(previous().lexeme));
+        return std::make_shared<ArrayIndexExpr>(name, index);
+    }
+    error("Harap masukkan indeks array berupa angka");
+    return nullptr;
+}
+
+ExprPtr Parser::parseArrayLiteral() {
+    std::vector<ExprPtr> elements;
+    
+    if (!check(TokenType::RBRACKET)) {
+        do {
+            elements.push_back(parseExpression());
+        } while (match(TokenType::COMMA));
+    }
+    
+    consume(TokenType::RBRACKET, "Harap ']' setelah elemen array.");
+    return std::make_shared<ArrayLiteralExpr>(elements);
 }
 
 void Parser::error(const std::string& message) {

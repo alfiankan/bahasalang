@@ -242,6 +242,14 @@ void Codegen::generateReturn(const ReturnStmt* ret, llvm::Function* currentFunct
 }
 
 void Codegen::generateVarDecl(const VarDeclStmt* var, llvm::Function* currentFunction) {
+    llvm::Value* value = generateExpr(var->initializer.get());
+    
+    // If this is an array declaration
+    if (value->getType()->isPointerTy()) {
+        namedValues[var->name] = value; // Store the array pointer directly
+        return;
+    }
+    
     // Create an alloca instruction in the entry block of the function
     llvm::IRBuilder<> tempBuilder(&currentFunction->getEntryBlock(), 
                                  currentFunction->getEntryBlock().begin());
@@ -249,11 +257,8 @@ void Codegen::generateVarDecl(const VarDeclStmt* var, llvm::Function* currentFun
     // Create alloca for the variable
     llvm::AllocaInst* alloca = tempBuilder.CreateAlloca(getIntType(), nullptr, var->name);
     
-    // Generate the initializer expression
-    llvm::Value* initValue = generateExpr(var->initializer.get());
-    
     // Store the initial value
-    builder->CreateStore(initValue, alloca);
+    builder->CreateStore(value, alloca);
     
     // Remember the alloca instruction for this variable
     namedValues[var->name] = alloca;
@@ -322,6 +327,12 @@ llvm::Value* Codegen::generateExpr(const Expr* expr) {
     }
     else if (auto assign = dynamic_cast<const AssignmentExpr*>(expr)) {
         return generateAssignment(assign);
+    }
+    else if (auto arrayLit = dynamic_cast<const ArrayLiteralExpr*>(expr)) {
+        return generateArrayLiteral(arrayLit);
+    }
+    else if (auto arrayIndex = dynamic_cast<const ArrayIndexExpr*>(expr)) {
+        return generateArrayIndex(arrayIndex);
     }
     
     llvm::report_fatal_error(llvm::Twine("Tipe ekspresi tidak dikenal"));
@@ -515,6 +526,87 @@ llvm::Value* Codegen::generateAssignment(const AssignmentExpr* assign) {
     
     // Return the assigned value
     return value;
+}
+
+llvm::Value* Codegen::generateArrayLiteral(const ArrayLiteralExpr* arrayLiteral) {
+    // Get the size of the array
+    size_t size = arrayLiteral->elements.size();
+    
+    // Create array type
+    llvm::Type* elementType = getIntType(); // For now, only supporting int arrays
+    llvm::ArrayType* arrayType = llvm::ArrayType::get(elementType, size);
+    
+    // Create alloca for the array
+    llvm::AllocaInst* arrayAlloca = builder->CreateAlloca(arrayType, nullptr, "array");
+    
+    // Initialize array elements
+    for (size_t i = 0; i < size; i++) {
+        // Get element value
+        llvm::Value* element = generateExpr(arrayLiteral->elements[i].get());
+        
+        // Create GEP for the index
+        std::vector<llvm::Value*> indices = {
+            llvm::ConstantInt::get(*context, llvm::APInt(32, 0)),
+            llvm::ConstantInt::get(*context, llvm::APInt(32, i))
+        };
+        llvm::Value* elementPtr = builder->CreateGEP(arrayType, arrayAlloca, indices, "array.element");
+        
+        // Store the element
+        builder->CreateStore(element, elementPtr);
+    }
+    
+    return arrayAlloca;
+}
+
+llvm::Value* Codegen::generateArrayIndex(const ArrayIndexExpr* arrayIndex) {
+    // Get the array pointer
+    llvm::Value* arrayPtr = namedValues[arrayIndex->array];
+    if (!arrayPtr) {
+        llvm::report_fatal_error(llvm::Twine("Array tidak ditemukan: ") + arrayIndex->array);
+    }
+    
+    // Get array type
+    llvm::Type* ptrType = arrayPtr->getType();
+    if (!ptrType->isPointerTy()) {
+        llvm::report_fatal_error(llvm::Twine("Variabel bukan pointer: ") + arrayIndex->array);
+    }
+    
+    // Get array size from the alloca instruction
+    llvm::AllocaInst* alloca = llvm::dyn_cast<llvm::AllocaInst>(arrayPtr);
+    if (!alloca) {
+        llvm::report_fatal_error(llvm::Twine("Variabel bukan array: ") + arrayIndex->array);
+    }
+    
+    llvm::ArrayType* arrayType = llvm::dyn_cast<llvm::ArrayType>(alloca->getAllocatedType());
+    if (!arrayType) {
+        llvm::report_fatal_error(llvm::Twine("Variabel bukan array: ") + arrayIndex->array);
+    }
+    
+    // Get array size
+    size_t arraySize = arrayType->getArrayNumElements();
+    
+    // Get index value - must be a constant number
+    if (auto numExpr = dynamic_cast<const NumberExpr*>(arrayIndex->index.get())) {
+        if (numExpr->value < 0 || numExpr->value >= arraySize) {
+            llvm::report_fatal_error("Indeks array di luar batas");
+        }
+        llvm::Value* indexValue = llvm::ConstantInt::get(getIntType(), numExpr->value);
+        
+        // Create GEP indices
+        std::vector<llvm::Value*> indices = {
+            llvm::ConstantInt::get(*context, llvm::APInt(32, 0)),
+            indexValue
+        };
+        
+        // Create GEP instruction
+        llvm::Value* elementPtr = builder->CreateGEP(arrayType, arrayPtr, indices, "array.index");
+        
+        // Load and return the element
+        return builder->CreateLoad(arrayType->getArrayElementType(), elementPtr, "array.load");
+    }
+    
+    llvm::report_fatal_error("Indeks array harus berupa angka konstan");
+    return nullptr;
 }
 
 } // namespace bahasa 

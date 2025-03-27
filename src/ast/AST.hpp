@@ -15,6 +15,33 @@ class ASTPrinter;  // Add this forward declaration
 using ExprPtr = std::shared_ptr<Expr>;
 using StmtPtr = std::shared_ptr<Stmt>;
 
+// Type representation
+class Type {
+public:
+    enum class Kind {
+        Int,
+        Array
+    };
+    
+    Kind kind;
+    std::shared_ptr<Type> elementType;  // For array types
+    size_t arraySize;                   // For array types
+    
+    static std::shared_ptr<Type> createInt() {
+        auto t = std::make_shared<Type>();
+        t->kind = Kind::Int;
+        return t;
+    }
+    
+    static std::shared_ptr<Type> createArray(std::shared_ptr<Type> element, size_t size) {
+        auto t = std::make_shared<Type>();
+        t->kind = Kind::Array;
+        t->elementType = element;
+        t->arraySize = size;
+        return t;
+    }
+};
+
 // Base class for all expressions
 class Expr {
 public:
@@ -51,6 +78,22 @@ class StringExpr : public Expr {
 public:
     std::string value;
     explicit StringExpr(std::string val) : value(std::move(val)) {}
+};
+
+// Array literal expression
+class ArrayLiteralExpr : public Expr {
+public:
+    std::vector<ExprPtr> elements;
+    explicit ArrayLiteralExpr(std::vector<ExprPtr> elems) : elements(std::move(elems)) {}
+};
+
+// Array indexing expression
+class ArrayIndexExpr : public Expr {
+public:
+    std::string array;
+    ExprPtr index;
+    ArrayIndexExpr(std::string arr, ExprPtr idx) 
+        : array(std::move(arr)), index(std::move(idx)) {}
 };
 
 // Base class for all statements
@@ -100,10 +143,11 @@ public:
 class VarDeclStmt : public Stmt {
 public:
     std::string name;
+    std::shared_ptr<Type> type;
     ExprPtr initializer;
     
-    VarDeclStmt(std::string n, ExprPtr init)
-        : name(std::move(n)), initializer(std::move(init)) {}
+    VarDeclStmt(std::string n, std::shared_ptr<Type> t, ExprPtr init)
+        : name(std::move(n)), type(std::move(t)), initializer(std::move(init)) {}
 };
 
 // Add new statement type for if statements

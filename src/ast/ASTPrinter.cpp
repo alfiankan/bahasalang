@@ -45,6 +45,18 @@ void ASTPrinter::printExpr(const ExprPtr& expr, std::string prefix, bool isLast)
     else if (auto var = std::dynamic_pointer_cast<VariableExpr>(expr)) {
         printBranch("Variable: " + var->name, prefix, isLast);
     }
+    else if (auto arrayLit = std::dynamic_pointer_cast<ArrayLiteralExpr>(expr)) {
+        printBranch("ArrayLiteral", prefix, isLast);
+        std::string newPrefix = prefix + (isLast ? "    " : "│   ");
+        for (size_t i = 0; i < arrayLit->elements.size(); ++i) {
+            printExpr(arrayLit->elements[i], newPrefix, i == arrayLit->elements.size() - 1);
+        }
+    }
+    else if (auto arrayIndex = std::dynamic_pointer_cast<ArrayIndexExpr>(expr)) {
+        printBranch("ArrayIndex: " + arrayIndex->array, prefix, isLast);
+        std::string newPrefix = prefix + (isLast ? "    " : "│   ");
+        printExpr(arrayIndex->index, newPrefix, true);
+    }
     else if (auto binary = std::dynamic_pointer_cast<BinaryExpr>(expr)) {
         printBranch("Binary: " + binary->op, prefix, isLast);
         std::string newPrefix = prefix + (isLast ? "    " : "│   ");

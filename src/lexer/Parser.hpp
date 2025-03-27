@@ -39,6 +39,9 @@ private:
     StmtPtr parseIf();
     ExprPtr parseComparison();
     void parseModuleDecl();
+    std::shared_ptr<Type> parseType();
+    ExprPtr parseArrayIndex(const std::string& name);
+    ExprPtr parseArrayLiteral();
 };
 
 } // namespace bahasa

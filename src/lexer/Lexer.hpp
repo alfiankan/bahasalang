@@ -16,6 +16,7 @@ enum class TokenType {
     MODULO,       // modulo (modulo operator)
     ADALAH,       // adalah (equality operator)
     TIDUR,        // tidur (sleep function)
+    KOLEKSI,      // koleksi (array type)
     
     // Symbols
     ARROW,        // ->
@@ -23,6 +24,9 @@ enum class TokenType {
     RPAREN,       // )
     LBRACE,       // {
     RBRACE,       // }
+    LBRACKET,     // [
+    RBRACKET,     // ]
+    DOT,          // .
     COMMA,        // ,
     COLON,        // :
     PLUS,         // +

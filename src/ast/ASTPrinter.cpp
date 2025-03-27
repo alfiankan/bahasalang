@@ -1,4 +1,5 @@
 #include "ASTPrinter.hpp"
+#include <algorithm>
 
 namespace bahasa {
 
@@ -58,6 +59,9 @@ void ASTPrinter::printExpr(const ExprPtr& expr, std::string prefix, bool isLast)
         }
     }
     else if (auto str = std::dynamic_pointer_cast<StringExpr>(expr)) {
+        str->value.erase(std::remove_if(str->value.begin(), str->value.end(),
+              [](unsigned char c) { return c == '\n' || c == '\t' || c == '\r'; }),
+              str->value.end());
         printBranch("String: \"" + str->value + "\"", prefix, isLast);
     }
     else if (auto comp = std::dynamic_pointer_cast<ComparisonExpr>(expr)) {

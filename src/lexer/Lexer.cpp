@@ -1,5 +1,6 @@
 #include "Lexer.hpp"
 #include <unordered_map>
+#include <stdexcept>
 
 namespace bahasa {
 

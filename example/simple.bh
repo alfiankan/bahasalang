@@ -1,0 +1,6 @@
+modul main
+
+
+fungsi main() -> int {
+    <- 0
+}

@@ -227,6 +227,9 @@ void Codegen::generateFunction(const FunctionStmt* func) {
         else if (auto ifStmt = std::dynamic_pointer_cast<IfStmt>(stmt)) {
             generateIf(ifStmt.get(), function);
         }
+        else if (auto tryStmt = std::dynamic_pointer_cast<TryStmt>(stmt)) {
+            generateTryBlock(tryStmt.get(), function);
+        }
         else if (auto exprStmt = std::dynamic_pointer_cast<ExprStmt>(stmt)) {
             generateExprStmt(exprStmt.get(), function);
         }
@@ -332,7 +335,7 @@ llvm::Value* Codegen::generateExpr(const Expr* expr) {
         return generateArrayLiteral(arrayLit);
     }
     else if (auto arrayIndex = dynamic_cast<const ArrayIndexExpr*>(expr)) {
-        return generateArrayIndex(arrayIndex);
+        return generateArrayIndex(arrayIndex, nullptr);
     }
     
     llvm::report_fatal_error(llvm::Twine("Tipe ekspresi tidak dikenal"));
@@ -558,7 +561,7 @@ llvm::Value* Codegen::generateArrayLiteral(const ArrayLiteralExpr* arrayLiteral)
     return arrayAlloca;
 }
 
-llvm::Value* Codegen::generateArrayIndex(const ArrayIndexExpr* arrayIndex) {
+llvm::Value* Codegen::generateArrayIndex(const ArrayIndexExpr* arrayIndex, llvm::BasicBlock* errorBlock) {
     // Get the array pointer
     llvm::Value* arrayPtr = namedValues[arrayIndex->array];
     if (!arrayPtr) {
@@ -588,8 +591,13 @@ llvm::Value* Codegen::generateArrayIndex(const ArrayIndexExpr* arrayIndex) {
     // Get index value - must be a constant number
     if (auto numExpr = dynamic_cast<const NumberExpr*>(arrayIndex->index.get())) {
         if (numExpr->value < 0 || numExpr->value >= arraySize) {
-            llvm::report_fatal_error("Indeks array di luar batas");
+            // Branch to error block if it exists
+            if (errorBlock) {
+                builder->CreateBr(errorBlock);
+            }
+            return llvm::ConstantInt::get(getIntType(), 0);
         }
+        
         llvm::Value* indexValue = llvm::ConstantInt::get(getIntType(), numExpr->value);
         
         // Create GEP indices
@@ -607,6 +615,47 @@ llvm::Value* Codegen::generateArrayIndex(const ArrayIndexExpr* arrayIndex) {
     
     llvm::report_fatal_error("Indeks array harus berupa angka konstan");
     return nullptr;
+}
+
+void Codegen::generateTryBlock(const TryStmt* tryStmt, llvm::Function* currentFunction) {
+    // Create blocks for try, error handling, and continue
+    llvm::BasicBlock* tryBlock = llvm::BasicBlock::Create(*context, "try", currentFunction);
+    llvm::BasicBlock* errorBlock = llvm::BasicBlock::Create(*context, "error", currentFunction);
+    llvm::BasicBlock* continueBlock = llvm::BasicBlock::Create(*context, "try_continue", currentFunction);
+    
+    // Branch to try block
+    builder->CreateBr(tryBlock);
+    
+    // Generate try block
+    builder->SetInsertPoint(tryBlock);
+    for (const auto& stmt : tryStmt->tryBlock) {
+        if (auto ret = std::dynamic_pointer_cast<ReturnStmt>(stmt)) {
+            generateReturn(ret.get(), currentFunction);
+        }
+        else if (auto var = std::dynamic_pointer_cast<VarDeclStmt>(stmt)) {
+            generateVarDecl(var.get(), currentFunction);
+        }
+        else if (auto ifStmt = std::dynamic_pointer_cast<IfStmt>(stmt)) {
+            generateIf(ifStmt.get(), currentFunction);
+        }
+        else if (auto exprStmt = std::dynamic_pointer_cast<ExprStmt>(stmt)) {
+            if (auto arrayIndex = std::dynamic_pointer_cast<ArrayIndexExpr>(exprStmt->expr)) {
+                generateArrayIndex(arrayIndex.get(), errorBlock);
+            } else {
+                generateExprStmt(exprStmt.get(), currentFunction);
+            }
+        }
+    }
+    
+    // If we get here, no error occurred, branch to continue block
+    builder->CreateBr(continueBlock);
+    
+    // Generate error block (returns 0 and continues)
+    builder->SetInsertPoint(errorBlock);
+    builder->CreateBr(continueBlock);
+    
+    // Set insertion point to continue block for further code
+    builder->SetInsertPoint(continueBlock);
 }
 
 } // namespace bahasa 

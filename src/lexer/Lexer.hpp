@@ -17,6 +17,7 @@ enum class TokenType {
     ADALAH,       // adalah (equality operator)
     TIDUR,        // tidur (sleep function)
     KOLEKSI,      // koleksi (array type)
+    ABAIKAN,      // abaikan (try block)
     
     // Symbols
     ARROW,        // ->

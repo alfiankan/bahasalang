@@ -42,6 +42,14 @@ private:
     std::shared_ptr<Type> parseType();
     ExprPtr parseArrayIndex(const std::string& name);
     ExprPtr parseArrayLiteral();
+
+    // Statement parsing
+    StmtPtr parseStatement();
+    StmtPtr parseTryBlock();
+    StmtPtr parseFunctionDeclaration();
+    StmtPtr parseVarDeclaration();
+    StmtPtr parseReturnStatement();
+    StmtPtr parseExpressionStatement();
 };
 
 } // namespace bahasa

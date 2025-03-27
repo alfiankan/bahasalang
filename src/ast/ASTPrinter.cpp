@@ -36,6 +36,13 @@ void ASTPrinter::printStmt(const StmtPtr& stmt, std::string prefix, bool isLast)
     else if (auto expr = std::dynamic_pointer_cast<ExprStmt>(stmt)) {
         printExpr(expr->expr, prefix, isLast);
     }
+    else if (auto tryStmt = std::dynamic_pointer_cast<TryStmt>(stmt)) {
+        printBranch("Try", prefix, isLast);
+        std::string newPrefix = prefix + (isLast ? "    " : "│   ");
+        for (size_t i = 0; i < tryStmt->tryBlock.size(); ++i) {
+            printStmt(tryStmt->tryBlock[i], newPrefix, i == tryStmt->tryBlock.size() - 1);
+        }
+    }
 }
 
 void ASTPrinter::printExpr(const ExprPtr& expr, std::string prefix, bool isLast) {

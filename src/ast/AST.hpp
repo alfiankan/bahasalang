@@ -160,6 +160,15 @@ public:
         : condition(std::move(cond)), thenBranch(std::move(then)) {}
 };
 
+// Add new statement type for try blocks
+class TryStmt : public Stmt {
+public:
+    std::vector<StmtPtr> tryBlock;
+    
+    explicit TryStmt(std::vector<StmtPtr> block)
+        : tryBlock(std::move(block)) {}
+};
+
 // Update ComparisonExpr to handle both comparison and equality
 class ComparisonExpr : public Expr {
 public:

@@ -95,6 +95,8 @@ StmtPtr Parser::parseFunction() {
             body.push_back(parseVarDecl());
         } else if (match(TokenType::IF)) {
             body.push_back(parseIf());
+        } else if (match(TokenType::ABAIKAN)) {
+            body.push_back(parseTryBlock());
         } else {
             // Parse expression statement (e.g., function calls)
             auto expr = parseExpression();
@@ -296,6 +298,28 @@ ExprPtr Parser::parseArrayLiteral() {
     
     consume(TokenType::RBRACKET, "Harap ']' setelah elemen array.");
     return std::make_shared<ArrayLiteralExpr>(elements);
+}
+
+StmtPtr Parser::parseTryBlock() {
+    consume(TokenType::LBRACE, "Harap '{' setelah 'abaikan'");
+    std::vector<StmtPtr> statements;
+    
+    while (!check(TokenType::RBRACE) && !isAtEnd()) {
+        if (match(TokenType::RETURN_ARROW)) {
+            auto expr = parseExpression();
+            statements.push_back(std::make_shared<ReturnStmt>(expr));
+        } else if (match(TokenType::MUTASI)) {
+            statements.push_back(parseVarDecl());
+        } else if (match(TokenType::IF)) {
+            statements.push_back(parseIf());
+        } else {
+            auto expr = parseExpression();
+            statements.push_back(std::make_shared<ExprStmt>(expr));
+        }
+    }
+    
+    consume(TokenType::RBRACE, "Harap '}' setelah blok abaikan");
+    return std::make_shared<TryStmt>(statements);
 }
 
 void Parser::error(const std::string& message) {

@@ -29,7 +29,8 @@ private:
     void generateReturn(const ReturnStmt* ret, llvm::Function* currentFunction);
     void generateVarDecl(const VarDeclStmt* var, llvm::Function* currentFunction);
     void generateIf(const IfStmt* ifStmt, llvm::Function* currentFunction);
-    void generateExprStmt(const ExprStmt* stmt, llvm::Function* currentFunction);
+    void generateTryBlock(const TryStmt* tryStmt, llvm::Function* currentFunction);
+    void generateExprStmt(const ExprStmt* exprStmt, llvm::Function* currentFunction);
     
     // Expression generators
     llvm::Value* generateExpr(const Expr* expr);
@@ -41,7 +42,7 @@ private:
     llvm::Value* generateUnary(const UnaryExpr* unary);
     llvm::Value* generateAssignment(const AssignmentExpr* assign);
     llvm::Value* generateArrayLiteral(const ArrayLiteralExpr* arrayLiteral);
-    llvm::Value* generateArrayIndex(const ArrayIndexExpr* arrayIndex);
+    llvm::Value* generateArrayIndex(const ArrayIndexExpr* arrayIndex, llvm::BasicBlock* errorBlock = nullptr);
     
     // Helper methods
     llvm::Type* getIntType();

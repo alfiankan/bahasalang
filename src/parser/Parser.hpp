@@ -1,20 +1,48 @@
 #ifndef BAHASA_PARSER_HPP
 #define BAHASA_PARSER_HPP
 
-#include "../ast/AST.hpp"
+#include "parser/lexer/Lexer.hpp"
+#include "ast/AST.hpp"
 #include <vector>
-#include <string>
+#include <memory>
 
 namespace bahasa {
 
 class Parser {
 public:
-    explicit Parser(const std::vector<std::string>& tokens);
-    
-    // Main parsing function
+    explicit Parser(std::vector<Token> tokens);
     std::vector<StmtPtr> parse();
-    
+    std::string getModuleName() const { return moduleName; }
+
 private:
+    std::vector<Token> tokens;
+    int current = 0;
+    std::string moduleName;
+
+    bool isAtEnd() const;
+    Token peek() const;
+    Token previous() const;
+    Token advance();
+    bool check(TokenType type) const;
+    bool match(TokenType type);
+    bool consume(TokenType type, const std::string& message);
+    void error(const std::string& message);
+    
+    StmtPtr parseFunction();
+    std::vector<Parameter> parseParameters();
+    ExprPtr parseExpression();
+    ExprPtr parseBinary();
+    ExprPtr parsePrimary();
+    StmtPtr parseVarDecl();
+    ExprPtr parseCall(std::string callee);
+    std::vector<ExprPtr> parseArguments();
+    StmtPtr parseIf();
+    ExprPtr parseComparison();
+    void parseModuleDecl();
+    std::shared_ptr<Type> parseType();
+    ExprPtr parseArrayIndex(const std::string& name);
+    ExprPtr parseArrayLiteral();
+
     // Statement parsing
     StmtPtr parseStatement();
     StmtPtr parseTryBlock();
@@ -22,28 +50,6 @@ private:
     StmtPtr parseVarDeclaration();
     StmtPtr parseReturnStatement();
     StmtPtr parseExpressionStatement();
-    
-    // Expression parsing
-    ExprPtr parseExpression();
-    ExprPtr parseAssignment();
-    ExprPtr parseEquality();
-    ExprPtr parseComparison();
-    ExprPtr parseTerm();
-    ExprPtr parseFactor();
-    ExprPtr parseUnary();
-    ExprPtr parsePrimary();
-    
-    // Helper functions
-    bool match(const std::string& type);
-    bool check(const std::string& type);
-    std::string advance();
-    std::string peek();
-    bool isAtEnd();
-    std::string previous();
-    std::string consume(const std::string& type, const std::string& message);
-    
-    std::vector<std::string> tokens;
-    int current = 0;
 };
 
 } // namespace bahasa

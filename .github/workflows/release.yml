@@ -1,0 +1,99 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            artifact_name: bahasa-linux-x86_64
+          - os: macos-latest
+            arch: arm64
+            artifact_name: bahasa-darwin-arm64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install LLVM
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.0/clang+llvm-18.1.0-x86_64-linux-gnu-ubuntu-22.04.tar.xz
+        tar xf clang+llvm-18.1.0-x86_64-linux-gnu-ubuntu-22.04.tar.xz
+        sudo mv clang+llvm-18.1.0-x86_64-linux-gnu-ubuntu-22.04 /usr/local/llvm
+        echo "/usr/local/llvm/bin" >> $GITHUB_PATH
+        echo "LLVM_DIR=/usr/local/llvm/lib/cmake/llvm" >> $GITHUB_ENV
+
+    - name: Install LLVM (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install llvm@18
+        echo "/opt/homebrew/opt/llvm@18/bin" >> $GITHUB_PATH
+        echo "LLVM_DIR=/opt/homebrew/opt/llvm@18/lib/cmake/llvm" >> $GITHUB_ENV
+
+    - name: Install Ninja
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build
+
+    - name: Install Ninja (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install ninja
+
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DCMAKE_C_COMPILER=clang \
+          -G Ninja
+
+    - name: Build
+      run: |
+        cd build
+        ninja
+
+    - name: Create Release Directory
+      run: |
+        mkdir -p release
+        cp build/bahasa release/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: release/bahasa
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+        pattern: bahasa-*
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/bahasa-linux-x86_64
+          artifacts/bahasa-darwin-arm64
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

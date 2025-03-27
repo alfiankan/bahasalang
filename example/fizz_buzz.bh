@@ -10,10 +10,31 @@ fungsi fizz_buzz(n_iter: int) -> int {
     jika n_iter adalah 0 {
         <- 0
     }
+    tidur(1)
     <- fizz_buzz(n_iter - 1)
 }
 
 fungsi main() -> int {
     fizz_buzz(10)
+
+    mutasi angka_angka: koleksi[int] = [1,2,3,4,5]
+    mutasi hasil: int = angka_angka.2
+    tampilkan("KE 2: %d \n", hasil)
+
+    mutasi angka_angka: koleksi[int] = [1,2,3,4,5]
+    mutasi hasil: int = angka_angka.2
+    tampilkan("KE 2: %d \n", hasil)
+    tampilkan("KE 3: %d \n", angka_angka.3)
+
+    abaikan {
+        mutasi error: int = angka_angka.100
+        tampilkan("ke 1: %d \n", error)
+    }
+    abaikan {
+        mutasi tidak_error: int = angka_angka.1
+        tampilkan("ke 1: %d \n", tidak_error)
+    }
+    tampilkan("Pesan: %s\n", "selesei")
+
     <- 0
 }

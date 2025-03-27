@@ -2,22 +2,65 @@
 
 Bahasa is general purpose programming language that is designed in indonesian language just for fun not for production use yaaa.
 
+```bash
+modul main
+
+fungsi fizz_buzz(jumlah: int) -> int {
+    jika jumlah modulo 3 adalah 0 {
+        tampilkan("%s\n", "Fizz")
+    }
+    jika jumlah modulo 5 adalah 0 {
+        tampilkan("%s\n", "Buzz")
+    }
+    jika jumlah adalah 0 {
+        <- 0
+    }
+    tidur(1)
+    <- fizz_buzz(jumlah - 1)
+}
+
+fungsi main() -> int {
+    fizz_buzz(10)
+
+    mutasi angka_angka: koleksi[int] = [1,2,3,4,5]
+    mutasi hasil: int = angka_angka.2
+    tampilkan("KE 2: %d \n", hasil)
+
+    mutasi angka_angka: koleksi[int] = [1,2,3,4,5]
+    mutasi hasil: int = angka_angka.2
+    tampilkan("KE 2: %d \n", hasil)
+    tampilkan("KE 3: %d \n", angka_angka.3)
+
+    abaikan {
+        mutasi error: int = angka_angka.100
+        tampilkan("ke 1: %d \n", error)
+    }
+    abaikan {
+        mutasi tidak_error: int = angka_angka.1
+        tampilkan("ke 1: %d \n", tidak_error)
+    }
+    tampilkan("Pesan: %s\n", "selesei")
+
+    <- 0
+}
+```
+
 ### Components
 
-- [ ] Lexer
-- [ ] Parser
-- [ ] AST
-- [ ] Code Generator
-- [ ] Runtime GC
+- [x] Lexer
+- [x] Parser
+- [x] AST
+- [x] Code Generator
+- [-] Runtime GC
 
 ### Progress
 
-- [ ] function
-- [ ] variable
-- [ ] arithmetic
-- [ ] logical
-- [ ] control flow
-
+- [x] function
+- [x] variable
+- [x] arithmetic
+- [x] logical
+- [x] control flow
+- [x] Array
 
 ### How to build
 
@@ -28,72 +71,125 @@ cmake -G Ninja ..
 ninja
 ```
 
-### How to run
+### How to
+
+#### Run
 
 ```bash
-./Bahasa main.bh
+./Bahasa jalankan main.bh
+```
+
+#### Compile
+
+```bash
+./Bahasa susun main.bh -o programku
+```
+
+#### Generate LLVM IR
+```bash
+./Bahasa ir main.bh 
+```
+
+#### Generate AST
+```bash
+./Bahasa ast main.bh 
+```
+#### Generate TOKENS
+```bash
+./Bahasa token main.bh 
 ```
 
 ### Language Syntax and design
 
 #### Primitive Types
 
-- int // os bit
-- uint // os bit
-- bool // true, false equal to int
-- float // os bit
-#### function
+- int (32bit)
+- int array (32bit)
 
-
-```
-fungsi main() -> int1 { // function main return int
-    -> 0 // return 0
+#### comment
+```bash
+fungsi main() -> int {
+    -- this is comment 1
+    -- this is coment 2
+    -> 0
 }
 ```
 
-#### variable immutable
+#### function
 
-```
-konstan a = 10 // constant variable a with value 10
-```
-
-#### variable mutable
-
-```
-variabel a = 10 // mutable variable a with value 10
+```bash
+fungsi main() -> int {
+    -> 0 -- return 0
+}
 ```
 
-#### arithmetic
+#### variable decl mutable
 
-```
-a + b // add a and b
-a - b // subtract a and b
-a * b // multiply a and b
-a / b // divide a and b
-a % b // modulus a and b
-a ** b // power a and b
+```bash
+mutasi a = 10
+a = 70
 ```
 
-#### logical
 
-```
-a dan b 
-a atau b
-bukan a dan bukan b
-```
+#### arithmetic and logic
+
+```bash
+modul main
+
+fungsi main() -> int {
+    mutasi a: int = 10
+    a = 90
+    mutasi b: int = 20
+    mutasi c: int = a + b
+    tampilkan("Hasil: %d\n", c)
+    mutasi d: int = a - b
+    tampilkan("Hasil: %d\n", d)
+    mutasi e: int = a * b
+    tampilkan("Hasil: %d\n", e)
+    mutasi f: int = a / b
+    tampilkan("Hasil: %d\n", f)
+    mutasi g: int = a modulo b
+    tampilkan("Hasil: %d\n", g)
+    mutasi h: int = a > b
+    tampilkan("Hasil: %d\n", h)
+    mutasi i: int = a < b
+    tampilkan("Hasil: %d\n", i)
+
+    mutasi j: int = a >= b
+    tampilkan("Hasil: %d\n", j)
+    mutasi k: int = a <= b
+    tampilkan("Hasil: %d\n", k)
+    mutasi l: int = a dan b
+    tampilkan("Hasil: %d\n", l)
+    mutasi m: int = a atau b
+    tampilkan("Hasil: %d\n", m)
+    <- 0
+}
 
 #### control flow
 
-```
+```bash
 jika a > b {
 
 }
 ```
 
-#### while loop
+#### try block
 
-```
-selama a < b {
+```bash
+modul main
 
+fungsi main() -> int {
+    mutasi angka_angka: koleksi[int] = [1,2,3,4,5]
+    mutasi hasil: int = angka_angka.2
+    tampilkan("KE 2: %d \n", hasil)
+    tampilkan("KE 3: %d \n", angka_angka.3)
+
+    abaikan {
+        mutasi error: int = angka_angka.100
+        tampilkan("ke 1: %d \n", error)
+    }
+    tampilkan("Pesan: %s\n", "selesei")
+    <- 0
 }
 ```

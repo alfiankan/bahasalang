@@ -1,5 +1,7 @@
 ## Bahasa Language
 
+
+
 Bahasa is general purpose programming language that is designed in indonesian language just for fun not for production use yaaa.
 
 ```bash
@@ -70,6 +72,17 @@ cd build
 cmake -G Ninja ..
 ninja
 ```
+
+### Prebuilt Toolchain
+> just download and try at your PC
+
+
+| Platform | Architecture | Download |
+|----------|--------------|----------|
+| Linux    | x86_64       | [bahasa-linux-amd64](/prebuilt/bahasa-linux-amd64) |
+| macOS    | arm64        | [bahasa-darwin-arm64](prebuilt/bahasa-darwin-arm64) |
+
+
 
 ### How to
 

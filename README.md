@@ -86,6 +86,83 @@ ninja
 
 ### How to
 
+```bash
+alfiankan@ubuntu-x86-x64:~$ ./bahasa-linux-amd64
+Penggunaan: ./bahasa-linux-amd64 <perintah> [opsi] <berkas_sumber>
+
+Perintah:
+  ir       Kompilasi kode sumber ke LLVM IR
+  susun    Kompilasi kode sumber ke program
+  jalankan Kompilasi dan jalankan program
+  ast      Tampilkan AST
+  token    Tampilkan daftar token
+
+Opsi:
+  -o <berkas>   Berkas keluaran (default: a.out untuk susun/jalankan, <nama_modul>.ll untuk ir)
+alfiankan@ubuntu-x86-x64:~$ vim main.bh
+alfiankan@ubuntu-x86-x64:~$ ./bahasa-linux-amd64 ir main.bh
+alfiankan@ubuntu-x86-x64:~$ cat main.ll
+; ModuleID = 'main'
+source_filename = "main"
+
+@0 = private unnamed_addr constant [10 x i8] c"Hello %s\0A\00", align 1
+@1 = private unnamed_addr constant [6 x i8] c"World\00", align 1
+
+declare i32 @printf(ptr, ...)
+
+define void @tampilkan(ptr %0, i32 %1) {
+entry:
+  %2 = call i32 (ptr, ...) @printf(ptr %0, i32 %1)
+  ret void
+}
+
+define i32 @main() {
+entry:
+  call void @tampilkan(ptr @0, ptr @1)
+  ret i32 0
+}
+alfiankan@ubuntu-x86-x64:~$ ./bahasa-linux-amd64 ast main.bh
+Abstract Syntax Tree:
+└── Function: main
+    ├── Call: tampilkan
+    │   ├── String: "Hello %s"
+    │   └── String: "World"
+    └── Return
+        └── Number: 0
+alfiankan@ubuntu-x86-x64:~$ ./bahasa-linux-amd64 token main.bh
++--------------+-----------------+------+
+| Type         | Lexeme          | Line |
++--------------+-----------------+------+
+| MODUL        | modul           |     1|
+| IDENTIFIER   | main            |     1|
+| FUNCTION     | fungsi          |     5|
+| IDENTIFIER   | main            |     5|
+| LPAREN       | (               |     5|
+| RPAREN       | )               |     5|
+| ARROW        | ->              |     5|
+| INT          | int             |     5|
+| LBRACE       | {               |     5|
+| IDENTIFIER   | tampilkan       |     6|
+| LPAREN       | (               |     6|
+| STRING       | Hello %s\n      |     6|
+| COMMA        | ,               |     6|
+| STRING       | World           |     6|
+| RPAREN       | )               |     6|
+| RETURN_ARROW | <-              |     7|
+| NUMBER       | 0               |     7|
+| RBRACE       | }               |     8|
+| END          |                 |     9|
++--------------+-----------------+------+
+alfiankan@ubuntu-x86-x64:~$ ./bahasa-linux-amd64 susun main.bh
+alfiankan@ubuntu-x86-x64:~$ ./
+.ssh/               a.out               bahasa-linux-amd64
+alfiankan@ubuntu-x86-x64:~$ ./a.out
+Hello World
+alfiankan@ubuntu-x86-x64:~$ ./bahasa-linux-amd64 jalankan main.bh
+Hello World
+alfiankan@ubuntu-x86-x64:~$
+```
+
 #### Run
 
 ```bash

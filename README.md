@@ -1,3 +1,4 @@
+
 ## Bahasa Language
 
 
@@ -46,6 +47,13 @@ fungsi main() -> int {
     <- 0
 }
 ```
+
+### Spoiler
+
+https://github.com/user-attachments/assets/b22a7ded-96aa-4769-a998-f2f4a4a12f96
+
+
+
 
 ### Components
 

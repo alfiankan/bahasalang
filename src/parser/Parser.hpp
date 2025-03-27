@@ -1,7 +1,7 @@
 #ifndef BAHASA_PARSER_HPP
 #define BAHASA_PARSER_HPP
 
-#include "parser/lexer/Lexer.hpp"
+#include "Lexer.hpp"
 #include "ast/AST.hpp"
 #include <vector>
 #include <memory>

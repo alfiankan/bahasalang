@@ -1,9 +1,9 @@
-#include "lexer/Lexer.hpp"
+#include "parser/Lexer.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-#include "lexer/Parser.hpp"
+#include "parser/Parser.hpp"
 #include "ast/AST.hpp"
 #include "ast/ASTPrinter.hpp"
 #include "codegen/Codegen.hpp"
@@ -92,7 +92,7 @@ int compileLLVMIR(const std::string& sourcePath, const std::string& outputPath =
         codegen.dump(irStream);
         out << ir;
         
-        std::cout << "Berhasil dikompilasi ke " << outFile << std::endl;
+        //std::cout << "Berhasil dikompilasi ke " << outFile << std::endl;
         return 0;
 
     } catch (const std::exception& e) {
@@ -149,7 +149,7 @@ int compileToExecutable(const std::string& sourcePath, const std::string& output
         // Clean up temporary file
         std::remove(tempIR.c_str());
         
-        std::cout << "Successfully compiled to " << outputPath << std::endl;
+        //std::cout << "Successfully compiled to " << outputPath << std::endl;
         return 0;
         
     } catch (const std::exception& e) {

@@ -17,8 +17,8 @@ add_definitions(${LLVM_DEFINITIONS})
 # Add source files
 add_executable(bahasa
     src/main.cpp
-    src/lexer/Lexer.cpp
-    src/lexer/Parser.cpp
+    src/parser/Lexer.cpp
+    src/parser/Parser.cpp
     src/ast/AST.cpp
     src/codegen/Codegen.cpp
     src/ast/ASTPrinter.cpp
